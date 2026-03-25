@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { SignJWT, jwtVerify } from "jose";
+import { JWTPayload, SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { appConfig } from "@/lib/env";
 
@@ -12,6 +12,8 @@ export interface SessionUser {
   displayName: string;
 }
 
+type SessionPayload = JWTPayload & SessionUser;
+
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 10);
 }
@@ -21,7 +23,14 @@ export async function verifyPassword(password: string, hash: string) {
 }
 
 export async function createSessionToken(user: SessionUser) {
-  return new SignJWT(user)
+  const payload: SessionPayload = {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    displayName: user.displayName,
+  };
+
+  return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
@@ -30,7 +39,13 @@ export async function createSessionToken(user: SessionUser) {
 
 export async function verifySessionToken(token: string) {
   const verified = await jwtVerify(token, secret);
-  return verified.payload as unknown as SessionUser;
+  const payload = verified.payload as SessionPayload;
+  return {
+    id: payload.id,
+    username: payload.username,
+    email: payload.email,
+    displayName: payload.displayName,
+  } satisfies SessionUser;
 }
 
 export async function getSessionUser() {

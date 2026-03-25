@@ -107,3 +107,38 @@ export async function getAppsByProfile(username: string): Promise<FeedItem[]> {
   if (error || !data) return fallbackFeed.filter((item) => item.creator.username === username);
   return data.map((row) => mapApp(row as Record<string, any>));
 }
+
+export async function toggleLike(appSlug: string) {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data, error } = await supabase.rpc("toggle_like", { app_slug: appSlug });
+  if (error) throw error;
+  return data as { liked: boolean; likes: number };
+}
+
+export async function toggleSave(appSlug: string) {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data, error } = await supabase.rpc("toggle_save", { app_slug: appSlug });
+  if (error) throw error;
+  return data as { saved: boolean; saves: number };
+}
+
+export async function addComment(appSlug: string, content: string) {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data, error } = await supabase.rpc("add_comment", { app_slug: appSlug, content, parent_comment_id: null });
+  if (error) throw error;
+  return data;
+}
+
+export async function listComments(appId: string) {
+  if (!hasSupabase() || !supabase) return [];
+  const { data, error } = await supabase.from("app_comments").select("id, content, created_at, user_id").eq("app_id", appId).order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data;
+}
+
+export async function reportApp(appSlug: string, reason: string, notes: string) {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const { data, error } = await supabase.rpc("report_app", { app_slug: appSlug, reason, notes });
+  if (error) throw error;
+  return data;
+}

@@ -3,32 +3,43 @@
 import { motion } from "framer-motion";
 import { ExternalLink, Info, Maximize2, PlayCircle } from "lucide-react";
 
-import type { AppRecord } from "@/lib/types";
+import type { AppCard } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils/cn";
 
 type AppPreviewShellProps = {
-  app: AppRecord;
+  app: AppCard;
   interactive?: boolean;
+  stabilized?: boolean;
+  className?: string;
+  prioritized?: boolean;
 };
 
 export function AppPreviewShell({
   app,
   interactive = false,
+  stabilized = false,
+  className,
 }: AppPreviewShellProps) {
+  const isInteractive = interactive || stabilized;
+
   return (
     <motion.div
       initial={{ opacity: 0.92, scale: 0.985 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.24, ease: "easeOut" }}
-      className="relative overflow-hidden rounded-[28px] border border-white/10 bg-black/60 shadow-[0_40px_90px_-50px_rgba(114,100,255,0.65)]"
+      className={cn(
+        "relative overflow-hidden rounded-[28px] border border-white/10 bg-black/60 shadow-[0_40px_90px_-50px_rgba(114,100,255,0.65)]",
+        className,
+      )}
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(118,87,255,0.2),transparent_40%),linear-gradient(180deg,rgba(7,8,18,0.25)_0%,rgba(7,8,18,0.7)_100%)]" />
       <div className="relative aspect-[9/16] w-full">
         <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
             <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/72">
-              {interactive ? "stabilized" : "preview"}
+              {isInteractive ? "stabilized" : "preview"}
             </span>
             <Badge variant="outline" className="bg-black/25">
               {app.intentLabel}
@@ -94,7 +105,7 @@ export function AppPreviewShell({
             transition={{ delay: 0.1, duration: 0.3 }}
             className="absolute bottom-9 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm text-white/80 shadow-lg shadow-black/40"
           >
-            {interactive ? (
+            {isInteractive ? (
               <>
                 <Maximize2 className="h-4 w-4 text-fuchsia-300" />
                 interaction locked

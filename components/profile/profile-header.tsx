@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe2, Linkedin, Mail, Twitter } from "lucide-react";
+import { Globe2, Link2, Mail } from "lucide-react";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -12,17 +12,15 @@ type ProfileHeaderProps = {
 };
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
+  const goals = profile.goals ?? (profile.goal ? [profile.goal] : []);
+
   return (
     <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03]">
       <div className="h-40 bg-[radial-gradient(circle_at_top_left,_rgba(121,82,255,0.55),_transparent_42%),linear-gradient(135deg,rgba(15,17,26,1),rgba(10,10,14,1))]" />
       <div className="flex flex-col gap-6 px-6 pb-6 sm:px-8">
         <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-end gap-4">
-            <Avatar
-              label={profile.displayName}
-              size="xl"
-              imageUrl={profile.avatarUrl}
-            />
+            <Avatar src={profile.avatarUrl} alt={profile.displayName} size="xl" />
             <div className="pb-1">
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-semibold tracking-tight text-white">
@@ -49,7 +47,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
               {profile.bio}
             </p>
             <div className="flex flex-wrap gap-2">
-              {profile.goals.map((goal) => (
+              {goals.map((goal) => (
                 <Badge
                   key={goal}
                   className="border-white/10 bg-white/[0.05] text-white/65 ring-1 ring-white/10"
@@ -65,20 +63,22 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
               <Mail className="size-4 text-white/40" />
               <span>{profile.contactEmail}</span>
             </div>
-            <div className="flex items-center gap-3">
-              <Globe2 className="size-4 text-white/40" />
-              <a
-                className="hover:text-white"
-                href={profile.websiteUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                {profile.websiteUrl.replace("https://", "")}
-              </a>
-            </div>
+            {profile.websiteUrl ? (
+              <div className="flex items-center gap-3">
+                <Globe2 className="size-4 text-white/40" />
+                <a
+                  className="hover:text-white"
+                  href={profile.websiteUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {profile.websiteUrl.replace("https://", "")}
+                </a>
+              </div>
+            ) : null}
             {profile.twitterUrl ? (
               <div className="flex items-center gap-3">
-                <Twitter className="size-4 text-white/40" />
+                <Link2 className="size-4 text-white/40" />
                 <a
                   className="hover:text-white"
                   href={profile.twitterUrl}
@@ -91,7 +91,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
             ) : null}
             {profile.linkedinUrl ? (
               <div className="flex items-center gap-3">
-                <Linkedin className="size-4 text-white/40" />
+                <Link2 className="size-4 text-white/40" />
                 <a
                   className="hover:text-white"
                   href={profile.linkedinUrl}

@@ -4,27 +4,36 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark, Heart, MessageCircle, MoveUpRight, UserRound } from "lucide-react";
 
-import type { AppRecord } from "@/lib/types";
+import type { AppCard } from "@/lib/types";
 import { AppPreviewShell } from "@/components/player/app-preview-shell";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 type FeedCardProps = {
-  app: AppRecord;
+  app: AppCard;
   prioritized?: boolean;
+  compact?: boolean;
 };
 
-export function FeedCard({ app, prioritized = false }: FeedCardProps) {
+export function FeedCard({ app, prioritized = false, compact = false }: FeedCardProps) {
   return (
     <motion.article
       layout
-      className="relative flex min-h-[100svh] snap-start items-stretch justify-center px-4 py-4 sm:px-6"
+      className={compact
+        ? "relative flex items-stretch justify-center"
+        : "relative flex min-h-[100svh] snap-start items-stretch justify-center px-4 py-4 sm:px-6"}
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
     >
-      <div className="grid w-full max-w-7xl grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_88px]">
+      <div
+        className={
+          compact
+            ? "grid w-full grid-cols-1 gap-4"
+            : "grid w-full max-w-7xl grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_88px]"
+        }
+      >
         <div className="relative overflow-hidden rounded-[32px] border border-white/12 bg-black/30 shadow-[0_40px_120px_rgba(0,0,0,0.45)]">
           <AppPreviewShell app={app} prioritized={prioritized} />
 
@@ -35,7 +44,6 @@ export function FeedCard({ app, prioritized = false }: FeedCardProps) {
               <Avatar
                 src={app.creator.avatarUrl}
                 alt={app.creator.username}
-                fallback={app.creator.username.slice(0, 2).toUpperCase()}
               />
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -43,12 +51,12 @@ export function FeedCard({ app, prioritized = false }: FeedCardProps) {
                     @{app.creator.username}
                   </span>
                   {app.creator.verified ? (
-                    <Badge variant="glass" className="text-[10px] uppercase tracking-[0.18em]">
+                  <Badge variant="glass" className="text-[10px] uppercase tracking-[0.18em]">
                       Verified
                     </Badge>
                   ) : null}
                 </div>
-                <p className="text-xs text-white/60">{app.creator.goal}</p>
+                <p className="text-xs text-white/60">{app.creator.goal ?? app.creator.bio}</p>
               </div>
             </div>
 
@@ -94,7 +102,13 @@ export function FeedCard({ app, prioritized = false }: FeedCardProps) {
           </div>
         </div>
 
-        <div className="z-20 flex flex-row gap-3 overflow-x-auto py-1 lg:flex-col lg:items-center lg:justify-end lg:overflow-visible lg:py-4">
+        <div
+          className={
+            compact
+              ? "z-20 flex flex-row gap-3 overflow-x-auto py-1"
+              : "z-20 flex flex-row gap-3 overflow-x-auto py-1 lg:flex-col lg:items-center lg:justify-end lg:overflow-visible lg:py-4"
+          }
+        >
           <ActionPill
             icon={<Heart className="size-5" />}
             label="Like"

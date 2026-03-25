@@ -6,6 +6,7 @@ export type AppCategory =
   | "workflow"
   | "productivity"
   | "research"
+  | "education"
   | "developer_tool"
   | "experiment";
 
@@ -13,8 +14,10 @@ export type CollaborationNeed =
   | "developers"
   | "designers"
   | "funding"
-  | "marketing"
+  | "distribution"
   | "operators";
+
+export type InlineFeedbackType = "brilliant" | "confusing" | "slow";
 
 export interface CreatorProfile {
   id: string;
@@ -26,10 +29,20 @@ export interface CreatorProfile {
   websiteUrl?: string;
   twitterUrl?: string;
   githubUrl?: string;
+  linkedinUrl?: string;
   contactEmail?: string;
   goal?: string;
+  goals?: string[];
   verified?: boolean;
-  followersCount: number;
+  followersCount?: number;
+  stats?: {
+    totalViews: number;
+    totalLikes: number;
+    totalSaves: number;
+    avgSessionTimeSeconds: number;
+    followersCount: number;
+  };
+  apps?: AppCard[];
 }
 
 export interface AppMetrics {
@@ -41,6 +54,8 @@ export interface AppMetrics {
   avgSessionTimeSeconds: number;
   bounceRate: number;
   healthScore: number;
+  loadTimeMs?: number;
+  timeToValueSeconds?: number;
 }
 
 export interface AppCard {
@@ -55,6 +70,8 @@ export interface AppCard {
   tags: string[];
   category: AppCategory;
   intentLabel: IntentLabel;
+  targetUser?: string;
+  problemStatement?: string;
   resourcesNeeded?: string;
   contactInfo?: string;
   collaborationHooks: CollaborationNeed[];
@@ -63,4 +80,8 @@ export interface AppCard {
   isVerified?: boolean;
   version?: string;
   changelog?: string;
+  pricingModel?: string;
 }
+
+export type AppRecord = AppCard;
+export type AppFeedItem = AppCard;

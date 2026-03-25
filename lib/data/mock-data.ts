@@ -1,4 +1,4 @@
-import { AppFeedItem, CreatorProfile, InlineFeedbackType } from "@/lib/types";
+import type { AppCard, CreatorProfile, InlineFeedbackType } from "@/lib/types";
 
 export const inlineFeedbackOptions: { label: string; value: InlineFeedbackType }[] = [
   { label: "Brilliant", value: "brilliant" },
@@ -6,7 +6,7 @@ export const inlineFeedbackOptions: { label: string; value: InlineFeedbackType }
   { label: "Slow", value: "slow" },
 ];
 
-export const mockApps: AppFeedItem[] = [
+export const mockApps: AppCard[] = [
   {
     id: "app-1",
     slug: "agent-atlas",
@@ -22,15 +22,13 @@ export const mockApps: AppFeedItem[] = [
     category: "ai_agent",
     intentLabel: "agent",
     isVerified: true,
-    loadTimeMs: 980,
-    appHealthScore: 91,
-    timeToValueSeconds: 2.1,
-    viewsCount: 18243,
-    likesCount: 2381,
-    commentsCount: 184,
-    savesCount: 1280,
-    avgSessionTimeSeconds: 46.8,
-    bounceRate: 0.14,
+    resourcesNeeded: "Looking for design partners and operators.",
+    contactInfo: "team@atlaslabs.ai",
+    collaborationHooks: ["developers", "operators"],
+    targetUser: "Operators and founders who need browser-native execution.",
+    problemStatement: "Too many AI agent products still feel like demos instead of usable workflows.",
+    version: "1.3.0",
+    changelog: "Added reusable task templates and smarter memory handoff.",
     creator: {
       id: "creator-1",
       username: "atlaslabs",
@@ -38,7 +36,25 @@ export const mockApps: AppFeedItem[] = [
       avatarUrl:
         "https://images.unsplash.com/photo-1541534401786-2077eed87a72?auto=format&fit=crop&w=300&q=80",
       bio: "Shipping agents that feel native to the browser.",
+      websiteUrl: "https://example.com",
+      twitterUrl: "https://x.com/example",
+      githubUrl: "https://github.com/example",
+      contactEmail: "team@atlaslabs.ai",
+      goal: "Looking for growth operators and design partners.",
       verified: true,
+      followersCount: 1831,
+    },
+    metrics: {
+      viewsCount: 18243,
+      likesCount: 2381,
+      commentsCount: 184,
+      savesCount: 1280,
+      sharesCount: 418,
+      avgSessionTimeSeconds: 46.8,
+      bounceRate: 0.14,
+      healthScore: 91,
+      timeToValueSeconds: 2.1,
+      loadTimeMs: 980,
     },
   },
   {
@@ -55,15 +71,13 @@ export const mockApps: AppFeedItem[] = [
     category: "ai_tool",
     intentLabel: "tool",
     isVerified: true,
-    loadTimeMs: 1210,
-    appHealthScore: 88,
-    timeToValueSeconds: 1.8,
-    viewsCount: 10320,
-    likesCount: 1542,
-    commentsCount: 96,
-    savesCount: 744,
-    avgSessionTimeSeconds: 35.2,
-    bounceRate: 0.19,
+    resourcesNeeded: "Looking for distribution and UX feedback.",
+    contactInfo: "contact@promptsurgeon.ai",
+    collaborationHooks: ["designers", "distribution"],
+    targetUser: "Indie builders and students using LLMs every day.",
+    problemStatement: "People waste time iterating on weak prompts without understanding why outputs fail.",
+    version: "1.1.2",
+    changelog: "Improved prompt diagnostics and added output-format presets.",
     creator: {
       id: "creator-2",
       username: "rafi",
@@ -71,7 +85,25 @@ export const mockApps: AppFeedItem[] = [
       avatarUrl:
         "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80",
       bio: "Designing AI micro-tools with fast time-to-value.",
+      websiteUrl: "https://example.com",
+      twitterUrl: "https://x.com/example",
+      githubUrl: "https://github.com/example",
+      contactEmail: "rafi@example.com",
+      goal: "Looking for creators who want to fork or remix workflow tools.",
       verified: true,
+      followersCount: 944,
+    },
+    metrics: {
+      viewsCount: 10320,
+      likesCount: 1542,
+      commentsCount: 96,
+      savesCount: 744,
+      sharesCount: 204,
+      avgSessionTimeSeconds: 35.2,
+      bounceRate: 0.19,
+      healthScore: 88,
+      timeToValueSeconds: 1.8,
+      loadTimeMs: 1210,
     },
   },
   {
@@ -88,15 +120,13 @@ export const mockApps: AppFeedItem[] = [
     category: "productivity",
     intentLabel: "utility",
     isVerified: false,
-    loadTimeMs: 890,
-    appHealthScore: 84,
-    timeToValueSeconds: 2.6,
-    viewsCount: 8940,
-    likesCount: 1160,
-    commentsCount: 77,
-    savesCount: 932,
-    avgSessionTimeSeconds: 41.1,
-    bounceRate: 0.21,
+    resourcesNeeded: "Looking for student ambassadors and curriculum testers.",
+    contactInfo: "hello@studyflow.app",
+    collaborationHooks: ["designers", "distribution"],
+    targetUser: "Students who need exam prep help without friction.",
+    problemStatement: "Course notes are dense and hard to convert into actionable revision material quickly.",
+    version: "0.9.4",
+    changelog: "Improved quiz generation and note-to-flashcard parsing.",
     creator: {
       id: "creator-3",
       username: "campusai",
@@ -104,7 +134,23 @@ export const mockApps: AppFeedItem[] = [
       avatarUrl:
         "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=300&q=80",
       bio: "Micro-tools for study speed and memory retention.",
+      websiteUrl: "https://example.com",
+      contactEmail: "hello@campusai.app",
+      goal: "Looking for campus testers and creators.",
       verified: false,
+      followersCount: 531,
+    },
+    metrics: {
+      viewsCount: 8940,
+      likesCount: 1160,
+      commentsCount: 77,
+      savesCount: 932,
+      sharesCount: 177,
+      avgSessionTimeSeconds: 41.1,
+      bounceRate: 0.21,
+      healthScore: 84,
+      timeToValueSeconds: 2.6,
+      loadTimeMs: 890,
     },
   },
 ];
@@ -122,16 +168,10 @@ export const mockProfiles: CreatorProfile[] = [
     websiteUrl: "https://example.com",
     twitterUrl: "https://x.com/example",
     githubUrl: "https://github.com/example",
+    contactEmail: "team@atlaslabs.ai",
     goal: "Looking for growth operators and design partners.",
     verified: true,
-    stats: {
-      totalViews: 98230,
-      totalLikes: 8344,
-      totalSaves: 3904,
-      avgSessionTimeSeconds: 44.2,
-      followersCount: 1831,
-    },
-    apps: [mockApps[0]],
+    followersCount: 1831,
   },
   {
     id: "creator-2",
@@ -145,15 +185,17 @@ export const mockProfiles: CreatorProfile[] = [
     websiteUrl: "https://example.com",
     twitterUrl: "https://x.com/example",
     githubUrl: "https://github.com/example",
+    contactEmail: "rafi@example.com",
     goal: "Looking for creators who want to fork or remix workflow tools.",
     verified: true,
-    stats: {
-      totalViews: 40124,
-      totalLikes: 3820,
-      totalSaves: 1604,
-      avgSessionTimeSeconds: 34.6,
-      followersCount: 944,
-    },
-    apps: [mockApps[1]],
+    followersCount: 944,
   },
 ];
+
+export function getMockProfileByUsername(username: string) {
+  return mockProfiles.find((profile) => profile.username === username) ?? null;
+}
+
+export function getMockUserApps(username: string) {
+  return mockApps.filter((app) => app.creator.username === username);
+}

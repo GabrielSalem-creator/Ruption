@@ -48,7 +48,9 @@ export default async function AppDetailPage({ params }: AppDetailPageProps) {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.6fr_0.9fr]">
-          <AppPreviewShell app={app} stabilized className="min-h-[72vh]" />
+          <div className="min-h-[72vh]">
+            <AppPreviewShell app={app} interactive />
+          </div>
 
           <div className="space-y-6">
             <Card className="space-y-4 p-6">
@@ -71,7 +73,10 @@ export default async function AppDetailPage({ params }: AppDetailPageProps) {
               <div className="grid grid-cols-2 gap-3">
                 <Metric label="Views" value={Intl.NumberFormat().format(app.metrics.viewsCount)} />
                 <Metric label="Saves" value={Intl.NumberFormat().format(app.metrics.savesCount)} />
-                <Metric label="Avg. session" value={`${app.metrics.avgSessionTime.toFixed(1)}s`} />
+                <Metric
+                  label="Avg. session"
+                  value={`${app.metrics.avgSessionTimeSeconds.toFixed(1)}s`}
+                />
                 <Metric label="Bounce rate" value={`${Math.round(app.metrics.bounceRate * 100)}%`} />
               </div>
             </Card>

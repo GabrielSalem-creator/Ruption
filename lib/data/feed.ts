@@ -1,8 +1,8 @@
 import { cache } from "react";
 
-import { mockApps } from "@/lib/data/mock-data";
+import { getMockProfileByUsername, mockApps } from "@/lib/data/mock-data";
 import type { AppCard, CreatorProfile } from "@/lib/types";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getServerSupabase } from "@/lib/supabase/server";
 
 const isSupabaseConfigured = () =>
   Boolean(
@@ -16,7 +16,10 @@ export const getFeedApps = cache(async (): Promise<AppCard[]> => {
   }
 
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = await getServerSupabase();
+    if (!supabase) {
+      return mockApps;
+    }
     const { data, error } = await supabase
       .from("feed_cards")
       .select("*")
@@ -39,15 +42,17 @@ export const getAppBySlug = cache(async (slug: string): Promise<AppCard | null> 
 
 export const getCreatorByUsername = cache(
   async (username: string): Promise<CreatorProfile | null> => {
-    const fromMock =
-      mockApps.find((app) => app.creator.username === username)?.creator ?? null;
+    const fromMock = getMockProfileByUsername(username);
 
     if (!isSupabaseConfigured()) {
       return fromMock;
     }
 
     try {
-      const supabase = await createServerSupabaseClient();
+      const supabase = await getServerSupabase();
+      if (!supabase) {
+        return fromMock;
+      }
       const { data, error } = await supabase
         .from("public_profiles")
         .select("*")

@@ -34,8 +34,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         </div>
 
         <div className="grid gap-5 lg:grid-cols-2">
-          {apps.map((app) => (
-            <FeedCard key={app.id} app={app} compact />
+          {apps.map((app, index) => (
+            <FeedCard key={app.id} app={app} prioritized={index === 0} />
           ))}
         </div>
       </section>

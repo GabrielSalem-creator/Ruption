@@ -2,11 +2,11 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 
-import type { AppRecord } from "@/lib/types";
+import type { AppCard } from "@/lib/types";
 import { FeedCard } from "@/components/feed/feed-card";
 
 type FeedListProps = {
-  apps: AppRecord[];
+  apps: AppCard[];
 };
 
 export function FeedList({ apps }: FeedListProps) {
@@ -20,7 +20,7 @@ export function FeedList({ apps }: FeedListProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: index * 0.04 }}
           >
-            <FeedCard app={app} priority={index === 0} />
+            <FeedCard app={app} prioritized={index === 0} />
           </motion.div>
         ))}
       </AnimatePresence>

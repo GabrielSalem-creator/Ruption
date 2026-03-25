@@ -22,3 +22,5 @@ export async function getServerSupabase() {
     },
   });
 }
+
+export const createServerSupabaseClient = getServerSupabase;

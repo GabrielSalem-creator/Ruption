@@ -1,4 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import fs from 'node:fs';
+import path from 'node:path';
 import pg from 'pg';
 
 const { Client } = pg;
@@ -30,7 +32,8 @@ async function getSupabaseUser(accessToken: string) {
   });
 
   if (!response.ok) {
-    throw new Error('Invalid or expired session');
+    const message = await response.text().catch(() => 'Invalid or expired session');
+    throw new Error(`Invalid or expired session: ${message}`);
   }
 
   return response.json() as Promise<{
@@ -42,6 +45,12 @@ async function getSupabaseUser(accessToken: string) {
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+async function ensureSchema(client: pg.Client) {
+  const schemaPath = path.join(process.cwd(), 'supabase', 'schema.sql');
+  const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+  await client.query(schemaSql);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -64,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const user = await getSupabaseUser(accessToken);
-    const payload = req.body ?? {};
+    const payload = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {});
     const title = String(payload.title ?? '').trim();
     const hook = String(payload.hook ?? '').trim();
     const description = String(payload.description ?? '').trim();
@@ -94,6 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     await client.connect();
+    await ensureSchema(client);
 
     const username = user.user_metadata?.username || user.email?.split('@')[0] || `user-${user.id.slice(0, 6)}`;
     const displayName = user.user_metadata?.display_name || username;
@@ -216,7 +226,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     });
   } catch (error) {
-    return res.status(400).json({ error: error instanceof Error ? error.message : 'Create app failed' });
+    const message = error instanceof Error ? error.message : 'Create app failed';
+    return res.status(400).json({ error: message, debug: { code: 'CREATE_APP_FAILED' } });
   } finally {
     await client.end().catch(() => undefined);
   }

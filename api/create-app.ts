@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { jwtVerify } from 'jose';
+import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
 
 const { Client } = pg;
@@ -8,27 +8,43 @@ function getConnectionString() {
   return process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL;
 }
 
-async function getSupabaseUser(accessToken: string) {
-  const jwtSecret = process.env.SUPABASE_JWT_SECRET;
-  if (!jwtSecret) {
-    throw new Error('Missing SUPABASE_JWT_SECRET');
+function getProjectUrl() {
+  return process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+}
+
+function getServiceKey() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+}
+
+function getSupabaseAdmin() {
+  const projectUrl = getProjectUrl();
+  const serviceKey = getServiceKey();
+  if (!projectUrl || !serviceKey) {
+    throw new Error('Missing Supabase server configuration');
   }
 
-  const secret = new TextEncoder().encode(jwtSecret);
-  const { payload } = await jwtVerify(accessToken, secret);
+  return createClient(projectUrl, serviceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+async function getSupabaseUser(accessToken: string) {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin.auth.getUser(accessToken);
+  if (error || !data.user) {
+    throw new Error(error?.message ?? 'Invalid or expired session');
+  }
 
   return {
-    id: String(payload.sub),
-    email: typeof payload.email === 'string' ? payload.email : undefined,
+    id: data.user.id,
+    email: data.user.email,
     user_metadata: {
-      username:
-        typeof payload.user_metadata === 'object' && payload.user_metadata && 'username' in payload.user_metadata
-          ? String((payload.user_metadata as Record<string, unknown>).username)
-          : undefined,
-      display_name:
-        typeof payload.user_metadata === 'object' && payload.user_metadata && 'display_name' in payload.user_metadata
-          ? String((payload.user_metadata as Record<string, unknown>).display_name)
-          : undefined,
+      username: data.user.user_metadata?.username as string | undefined,
+      display_name: data.user.user_metadata?.display_name as string | undefined,
     },
   } as {
     id: string;

@@ -2,54 +2,104 @@
 
 Rupture is a discovery engine for interactive web apps.
 
-The first shipping niche is:
+The current implementation in this repository is a:
+
+- Vite + React + TypeScript frontend
+- Supabase-backed authentication and data layer
+- Vercel-ready SPA deployment target
+
+## Locked launch niche
 
 **AI tools for builders and creators**
 
-This repository currently contains the implementation blueprint needed to build the product without ambiguity:
+This is intentionally constrained to prevent feed decay and low-quality inventory.
 
-- product identity and non-negotiables
-- system architecture
-- frontend interaction model
-- recommendation and moderation systems
-- exact backend API contract
-- initial PostgreSQL schema migration
-- launch and seeding strategy
+## What is implemented
 
-## Core product definition
+### Product surfaces
+- landing page
+- feed with full-screen cards
+- stabilized app mode via sandboxed iframe
+- create-post flow
+- profile page
+- app detail page
+- login and register flows
+- internal runtime demos
 
-Rupture is not a generic social network. It is a scrollable feed of live web apps where:
+### Supabase backend model
+- profiles
+- apps
+- app likes
+- app saves
+- app comments
+- app reports
+- public read views
+- RLS policies
+- secure RPC functions for app creation and interactions
 
-- users can discover apps without logging in
-- creators publish apps by submitting a URL and metadata
-- each feed item supports lightweight preview mode
-- tapping an item enters a stabilized interaction mode
-- the system ranks apps using engagement, quality, recency, and relevance
+### Security posture
+- only Supabase anon key is used in the browser
+- service role / secret are **not** shipped to the frontend
+- app creation uses `create_app_secure(...)`
+- likes, saves, comments, and reports use controlled authenticated paths
+- Vercel security headers configured in `vercel.json`
 
-## Hard rules
+## Required Supabase setup
 
-- No login walls inside submitted apps
-- No app load time above 2 seconds for accepted feed entries
-- No broken embeds in the main feed
-- No screenshot-only submissions unless used as fallback when live embedding fails
+Run these files in the Supabase SQL editor for your project:
 
-## Repository contents
+1. `supabase/schema.sql`
+2. `supabase/seed.sql`
 
-- `docs/rupture-system-blueprint.md` - complete product and architecture blueprint
-- `docs/api-contract.md` - exact REST API design
-- `db/migrations/0001_initial_schema.sql` - initial PostgreSQL schema
+Your project URL is expected to be exposed to the frontend through environment variables only.
 
-## Build direction
+## Environment variables
 
-Recommended implementation stack:
+Create `.env.local` locally:
 
-- Frontend: Next.js, TypeScript, Tailwind CSS
-- Backend: NestJS, PostgreSQL, Redis
-- Storage: S3-compatible object storage
-- Delivery: CDN + edge caching
+```env
+VITE_SUPABASE_URL=https://eiyxofhtcmbgaivgvkrh.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key_here
+```
 
-## Product principle
+For Vercel, add the same variables in Project Settings -> Environment Variables.
 
-The product is the live execution surface itself.
+## Local development
 
-Content supports discovery, but interactive app usage is the core experience.
+```bash
+npm install
+npm run dev
+```
+
+Then open:
+
+```text
+http://localhost:3000
+```
+
+## Production build
+
+```bash
+npm run build
+```
+
+## How to create an account
+
+1. Open `/register`
+2. Enter username, display name, email, and password
+3. Sign in through `/login`
+4. Publish through `/create`
+
+## How to publish on Vercel
+
+1. Push the repository to GitHub
+2. Import the repo into Vercel
+3. Framework preset: **Vite**
+4. Build command: `npm run build`
+5. Output directory: `dist`
+6. Add env vars:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+7. Deploy
+
+The `vercel.json` file already includes SPA rewrites so client-side routes like `/feed` and `/profile/:username` work correctly.

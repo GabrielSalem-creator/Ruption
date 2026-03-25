@@ -7,6 +7,25 @@ import { hasSupabase } from "@/lib/env";
 import { supabase } from "@/lib/supabase";
 import { FeedItem, PreflightResult } from "@/lib/types";
 
+async function ensureSupabaseBackendReady() {
+  const bootstrapSecret = import.meta.env.VITE_SUPABASE_BOOTSTRAP_SECRET;
+  if (!bootstrapSecret) {
+    throw new Error("Supabase backend is not initialized. Run supabase/schema.sql and supabase/seed.sql, or set VITE_SUPABASE_BOOTSTRAP_SECRET for automated bootstrap.");
+  }
+
+  const response = await fetch("/api/bootstrap-supabase", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${bootstrapSecret}`,
+    },
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({ error: "Bootstrap failed" }));
+    throw new Error(payload.error ?? "Bootstrap failed");
+  }
+}
+
 export function CreatePostWizard() {
   const { user, loading: authLoading } = useAuth();
   const [step, setStep] = useState(1);
@@ -65,7 +84,13 @@ export function CreatePostWizard() {
         preflight_result: result,
       };
 
-      const { data, error } = await supabase.rpc("create_app_secure", payload);
+      let { data, error } = await supabase.rpc("create_app_secure", payload);
+      if (error?.message?.includes("create_app_secure") || error?.code === "PGRST202" || error?.details?.includes("create_app_secure")) {
+        await ensureSupabaseBackendReady();
+        const retry = await supabase.rpc("create_app_secure", payload);
+        data = retry.data;
+        error = retry.error;
+      }
       if (error) throw error;
       setPublished(data as FeedItem);
       setStep(4);

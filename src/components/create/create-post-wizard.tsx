@@ -84,15 +84,47 @@ export function CreatePostWizard() {
         preflight_result: result,
       };
 
-      let { data, error } = await supabase.rpc("create_app_secure", payload);
-      if (error?.message?.includes("create_app_secure") || error?.code === "PGRST202" || error?.details?.includes("create_app_secure")) {
-        await ensureSupabaseBackendReady();
-        const retry = await supabase.rpc("create_app_secure", payload);
-        data = retry.data;
-        error = retry.error;
+      const sessionResult = await supabase.auth.getSession();
+      const accessToken = sessionResult.data.session?.access_token;
+      if (!accessToken) {
+        throw new Error("No active authenticated session found.");
       }
-      if (error) throw error;
-      setPublished(data as FeedItem);
+
+      let response = await fetch("/api/create-app", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const failedPayload = await response.json().catch(() => ({ error: "Publish failed" }));
+        const missingRpc =
+          String(failedPayload.error ?? "").includes("create_app_secure") ||
+          String(failedPayload.error ?? "").includes("relation") ||
+          response.status === 404;
+
+        if (missingRpc) {
+          await ensureSupabaseBackendReady();
+          response = await fetch("/api/create-app", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(payload),
+          });
+        }
+      }
+
+      const publishPayload = await response.json().catch(() => ({ error: "Publish failed" }));
+      if (!response.ok) {
+        throw new Error(publishPayload.error ?? "Publish failed");
+      }
+
+      setPublished(publishPayload.data as FeedItem);
       setStep(4);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Publish failed");

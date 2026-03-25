@@ -10,6 +10,7 @@ export interface Profile {
   goal: string;
   avatarGradient: string;
   bannerGradient: string;
+  avatarUrl?: string | null;
   websiteUrl?: string | null;
   twitterUrl?: string | null;
   githubUrl?: string | null;

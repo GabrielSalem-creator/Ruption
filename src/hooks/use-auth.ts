@@ -28,6 +28,8 @@ export function useAuth() {
           username: (authUser.user_metadata.username as string | undefined) ?? null,
           displayName: (authUser.user_metadata.display_name as string | undefined) ?? null,
         });
+      } else {
+        setUser(null);
       }
       setLoading(false);
     });

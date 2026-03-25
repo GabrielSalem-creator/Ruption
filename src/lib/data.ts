@@ -3,6 +3,12 @@ import { FeedItem, Profile } from "@/lib/types";
 import { hasSupabase } from "@/lib/env";
 import { supabase } from "@/lib/supabase";
 
+function getAvatarUrl(profileId: string) {
+  if (!hasSupabase() || !supabase) return null;
+  const { data } = supabase.storage.from('avatars').getPublicUrl(`${profileId}/avatar.png`);
+  return data.publicUrl;
+}
+
 function mapProfile(row: Record<string, any>): Profile {
   return {
     id: row.id,
@@ -12,7 +18,7 @@ function mapProfile(row: Record<string, any>): Profile {
     goal: row.goal ?? "",
     avatarGradient: row.avatar_gradient,
     bannerGradient: row.banner_gradient,
-    avatarUrl: row.avatar_url ?? null,
+    avatarUrl: getAvatarUrl(String(row.id)),
     websiteUrl: row.website_url,
     twitterUrl: row.twitter_url,
     githubUrl: row.github_url,
@@ -38,7 +44,6 @@ function mapApp(row: Record<string, any>): FeedItem {
     goal: row.creator_goal,
     avatar_gradient: row.creator_avatar_gradient,
     banner_gradient: row.creator_banner_gradient,
-    avatar_url: row.creator_avatar_url,
     website_url: row.creator_website_url,
     twitter_url: row.creator_twitter_url,
     github_url: row.creator_github_url,
@@ -155,7 +160,6 @@ export async function updateProfile(profileId: string, updates: Partial<Profile>
     twitter_url: updates.twitterUrl,
     github_url: updates.githubUrl,
     contact_email: updates.contactEmail,
-    avatar_url: updates.avatarUrl,
     updated_at: new Date().toISOString(),
   };
   const { error } = await supabase.from('profiles').update(payload).eq('id', profileId);
@@ -164,8 +168,7 @@ export async function updateProfile(profileId: string, updates: Partial<Profile>
 
 export async function uploadAvatar(profileId: string, file: File) {
   if (!supabase) throw new Error("Supabase is not configured.");
-  const extension = file.name.split('.').pop() || 'png';
-  const filePath = `${profileId}/avatar.${extension}`;
+  const filePath = `${profileId}/avatar.png`;
   const { error } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true, contentType: file.type || 'image/png' });
   if (error) throw error;
   const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);

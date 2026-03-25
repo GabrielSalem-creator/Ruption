@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flame, LayoutDashboard, PlusSquare, Sparkles, UserCircle2 } from "lucide-react";
-import { ReactNode } from "react";
+import { Flame, LayoutDashboard, LogIn, PlusSquare, Sparkles, UserCircle2 } from "lucide-react";
+import { ReactNode, useEffect, useState } from "react";
 
 const nav = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -15,6 +15,14 @@ const nav = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isRuntime = pathname.startsWith("/runtime/");
+  const [sessionLabel, setSessionLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/session")
+      .then((response) => response.json())
+      .then((payload) => setSessionLabel(payload.data?.user?.username ?? null))
+      .catch(() => setSessionLabel(null));
+  }, []);
 
   if (isRuntime) return <>{children}</>;
 
@@ -30,13 +38,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             {nav.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
-              return (
-                <Link key={item.href} className="nav-pill" href={item.href} data-active={active}>
-                  <Icon size={16} />
-                  <span>{item.label}</span>
-                </Link>
-              );
+              return <Link key={item.href} className="nav-pill" href={item.href} data-active={active}><Icon size={16} /><span>{item.label}</span></Link>;
             })}
+            {sessionLabel ? <span className="nav-pill" data-active="false">@{sessionLabel}</span> : <Link className="nav-pill" href="/login" data-active={pathname === "/login"}><LogIn size={16} /><span>Sign in</span></Link>}
           </nav>
         </div>
       </header>

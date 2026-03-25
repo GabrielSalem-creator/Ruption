@@ -4,10 +4,12 @@ Rupture is a discovery platform for interactive web apps.
 
 Instead of scrolling static videos, users scroll live app previews, open an app into a stabilized full-screen mode, interact with it, save it, comment on it, and follow the creator behind it.
 
-This repository currently contains the execution blueprint for the first build of Rupture:
+This repository now contains both the execution blueprint and the first implementation scaffold for Rupture:
 
 - product definition and UX rules
 - system architecture and rendering model
+- live Next.js frontend scaffold
+- Supabase integration layer
 - frontend component and folder structure
 - API contract
 - PostgreSQL schema and first migration
@@ -49,6 +51,9 @@ The app itself is the content.
 - `docs/frontend-architecture.md` - app structure, component tree, state boundaries, and rendering behavior
 - `docs/launch-plan.md` - niche seeding, supply strategy, and first distribution loops
 - `db/migrations/0001_initial_schema.sql` - initial PostgreSQL schema
+- `app/` and `components/` - first frontend implementation scaffold
+- `supabase/migrations/0001_ruption_platform.sql` - Supabase-native schema, RLS, triggers, and RPC functions
+- `supabase/seed.sql` - optional local/dev seed data
 
 ## Recommended build stack
 
@@ -68,3 +73,10 @@ The app itself is the content.
 3. ship interactions and analytics capture
 4. ship recommendation v1
 5. ship moderation, verification, and creator insights
+
+## Local development
+
+1. Copy `.env.example` to `.env.local`
+2. Fill in your Supabase project URL and keys locally
+3. Run `npm run dev`
+4. Apply `supabase/migrations/0001_ruption_platform.sql` in Supabase or via Supabase CLI

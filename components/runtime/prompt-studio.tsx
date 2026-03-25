@@ -1,0 +1,10 @@
+"use client";
+import { useMemo, useState } from "react";
+const scenarios = ["Create onboarding copy for a design tool", "Draft a founder-style launch thread", "Summarize user interviews into actions"];
+export function PromptStudioRuntime() {
+  const [prompt, setPrompt] = useState("You are a concise AI product strategist helping an early-stage founder.");
+  const [scenario, setScenario] = useState(scenarios[0]);
+  const [constraint, setConstraint] = useState("Keep the output under 120 words and bias toward clarity.");
+  const score = useMemo(() => Math.round(72 + Math.min(prompt.length / 2, 14) + Math.min(constraint.length / 5, 10)), [constraint.length, prompt.length]);
+  return <div className="runtime-wrap"><div className="runtime-grid"><div className="split"><div><span className="kicker">Prompt Studio</span><h1>Prompt testing surface</h1><p className="muted">Tweak your system prompt, scenario, and constraints. The score updates instantly.</p></div><span className="pill-status pill-status--success">Health score {score}</span></div><div className="grid-2"><div className="runtime-card"><label className="label">System prompt<textarea className="textarea" value={prompt} onChange={(e) => setPrompt(e.target.value)} /></label><label className="label">Constraint<textarea className="textarea" value={constraint} onChange={(e) => setConstraint(e.target.value)} /></label></div><div className="runtime-card"><label className="label">Scenario<select className="select" value={scenario} onChange={(e) => setScenario(e.target.value)}>{scenarios.map((item) => <option key={item}>{item}</option>)}</select></label><div className="timeline-card" style={{ marginTop: "1rem" }}><div className="muted">Generated preview</div><p><strong>Scenario:</strong> {scenario}</p><p>This prompt will bias toward clarity, direct value explanation, and a concise CTA. It is ready for a founder-facing AI workflow.</p></div></div></div></div></div>;
+}

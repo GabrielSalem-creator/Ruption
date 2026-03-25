@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
 
 const { Client } = pg;
@@ -15,34 +16,102 @@ function getServiceKey() {
   return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 }
 
-async function getSupabaseUser(accessToken: string) {
+function getSupabaseAdmin() {
   const projectUrl = getProjectUrl();
   const serviceKey = getServiceKey();
   if (!projectUrl || !serviceKey) {
     throw new Error('Missing Supabase server configuration');
   }
 
-  const response = await fetch(`${projectUrl}/auth/v1/user`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      apikey: serviceKey,
+  return createClient(projectUrl, serviceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
     },
   });
+}
 
-  if (!response.ok) {
-    const message = await response.text().catch(() => 'Invalid or expired session');
-    throw new Error(`Invalid or expired session: ${message}`);
+async function getSupabaseUser(accessToken: string) {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin.auth.getUser(accessToken);
+  if (error || !data.user) {
+    throw new Error(error?.message ?? 'Invalid or expired session');
   }
 
-  return response.json() as Promise<{
+  return {
+    id: data.user.id,
+    email: data.user.email,
+    user_metadata: {
+      username: data.user.user_metadata?.username as string | undefined,
+      display_name: data.user.user_metadata?.display_name as string | undefined,
+    },
+  } as {
     id: string;
     email?: string;
     user_metadata?: { username?: string; display_name?: string };
-  }>;
+  };
 }
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+async function ensureProfile(
+  client: pg.Client,
+  input: { userId: string; username: string; displayName: string; email: string },
+) {
+  const existing = await client.query(
+    'select id, username, display_name, contact_email from public.profiles where id = $1 limit 1',
+    [input.userId],
+  );
+
+  if (existing.rowCount && existing.rows[0]) {
+    await client.query(
+      `
+      update public.profiles
+      set display_name = $2,
+          contact_email = $3,
+          updated_at = now()
+      where id = $1
+      `,
+      [input.userId, input.displayName, input.email],
+    );
+
+    return {
+      username: String(existing.rows[0].username),
+      displayName: String(existing.rows[0].display_name),
+      email: String(existing.rows[0].contact_email ?? input.email),
+    };
+  }
+
+  let candidateUsername = input.username;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      await client.query(
+        `
+        insert into public.profiles (id, username, display_name, contact_email)
+        values ($1, $2, $3, $4)
+        `,
+        [input.userId, candidateUsername, input.displayName, input.email],
+      );
+
+      return {
+        username: candidateUsername,
+        displayName: input.displayName,
+        email: input.email,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (!message.includes('profiles_username_key')) {
+        throw error;
+      }
+
+      candidateUsername = `${input.username}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+  }
+
+  throw new Error('Could not create a unique profile username');
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -96,22 +165,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     await client.connect();
 
-    const username = user.user_metadata?.username || user.email?.split('@')[0] || `user-${user.id.slice(0, 6)}`;
-    const displayName = user.user_metadata?.display_name || username;
+    const preferredUsername = user.user_metadata?.username || user.email?.split('@')[0] || `user-${user.id.slice(0, 6)}`;
+    const preferredDisplayName = user.user_metadata?.display_name || preferredUsername;
     const email = user.email || '';
 
-    await client.query(
-      `
-      insert into public.profiles (id, username, display_name, contact_email)
-      values ($1, $2, $3, $4)
-      on conflict (id) do update set
-        username = excluded.username,
-        display_name = excluded.display_name,
-        contact_email = excluded.contact_email,
-        updated_at = now()
-      `,
-      [user.id, username, displayName, email],
-    );
+    const profile = await ensureProfile(client, {
+      userId: user.id,
+      username: preferredUsername,
+      displayName: preferredDisplayName,
+      email,
+    });
 
     let slug = slugify(title);
     if (!slug) slug = `app-${Date.now()}`;
@@ -191,8 +254,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         isVerified: app.is_verified,
         creator: {
           id: user.id,
-          username,
-          displayName,
+          username: profile.username,
+          displayName: profile.displayName,
           bio: '',
           goal: '',
           avatarGradient: 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
@@ -200,7 +263,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           websiteUrl: null,
           twitterUrl: null,
           githubUrl: null,
-          contactEmail: email,
+          contactEmail: profile.email,
           nicheFocus: 'AI tools for builders and creators',
           verified: false,
           stats: { followers: 0, following: 0, totalViews: 0, avgSessionTimeSeconds: 0, apps: 1 },
@@ -218,7 +281,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Create app failed';
-    return res.status(400).json({ error: message, debug: { code: 'CREATE_APP_FAILED' } });
+    console.error('create-app failed', error);
+    return res.status(400).json({ error: message, debug: { code: 'CREATE_APP_FAILED', message } });
   } finally {
     await client.end().catch(() => undefined);
   }

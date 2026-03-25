@@ -1,6 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import fs from 'node:fs';
-import path from 'node:path';
 import pg from 'pg';
 
 const { Client } = pg;
@@ -45,12 +43,6 @@ async function getSupabaseUser(accessToken: string) {
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-}
-
-async function ensureSchema(client: pg.Client) {
-  const schemaPath = path.join(process.cwd(), 'supabase', 'schema.sql');
-  const schemaSql = fs.readFileSync(schemaPath, 'utf8');
-  await client.query(schemaSql);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -103,7 +95,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     await client.connect();
-    await ensureSchema(client);
 
     const username = user.user_metadata?.username || user.email?.split('@')[0] || `user-${user.id.slice(0, 6)}`;
     const displayName = user.user_metadata?.display_name || username;

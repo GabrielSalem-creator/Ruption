@@ -121,7 +121,8 @@ export function CreatePostWizard() {
 
       const publishPayload = await response.json().catch(() => ({ error: "Publish failed" }));
       if (!response.ok) {
-        throw new Error(publishPayload.error ?? "Publish failed");
+        const debugCode = publishPayload.debug?.code ? ` (${publishPayload.debug.code})` : "";
+        throw new Error((publishPayload.error ?? "Publish failed") + debugCode);
       }
 
       setPublished(publishPayload.data as FeedItem);

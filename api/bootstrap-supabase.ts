@@ -9,6 +9,18 @@ function getConnectionString() {
   return process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL;
 }
 
+function getClientConfig() {
+  const connectionString = getConnectionString();
+  if (!connectionString) {
+    return null;
+  }
+
+  return {
+    connectionString,
+    ssl: connectionString.includes("sslmode=require") ? undefined : { rejectUnauthorized: false },
+  };
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -21,8 +33,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const connectionString = getConnectionString();
-  if (!connectionString) {
+  const clientConfig = getClientConfig();
+  if (!clientConfig?.connectionString) {
     return res.status(500).json({ error: 'Missing Postgres connection string' });
   }
 
@@ -31,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const schemaSql = fs.readFileSync(schemaPath, 'utf8');
   const seedSql = fs.readFileSync(seedPath, 'utf8');
 
-  const client = new Client({ connectionString, ssl: { rejectUnauthorized: false } });
+  const client = new Client(clientConfig);
 
   try {
     await client.connect();

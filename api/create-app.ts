@@ -8,6 +8,19 @@ function getConnectionString() {
   return process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL;
 }
 
+function buildPgConfig() {
+  const connectionString = getConnectionString();
+  if (!connectionString) {
+    throw new Error('Missing Postgres connection string');
+  }
+
+  // Supabase-provided connection strings for Vercel already carry the right SSL semantics.
+  // For hosted deployments, forcing a custom ssl object can trigger certificate-chain failures.
+  return {
+    connectionString,
+  };
+}
+
 function getProjectUrl() {
   return process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 }
@@ -130,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const accessToken = authHeader.slice('Bearer '.length);
-  const client = new Client({ connectionString, ssl: { rejectUnauthorized: false } });
+  const client = new Client(buildPgConfig());
 
   try {
     const user = await getSupabaseUser(accessToken);
